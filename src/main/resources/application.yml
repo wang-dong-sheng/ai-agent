@@ -1,6 +1,21 @@
 spring:
   profiles:
     active: local
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/agent?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+    username: root
+    password: 123456789
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: never
+
+
+# 额外的类型推断配置
+logging:
+  level:
+    org.springframework.beans: DEBUG
+    com.alibaba.cloud.nacos: WARN
 
 
 # springdoc-openapi????
@@ -24,5 +39,18 @@ server:
   port: 8123
   servlet:
     context-path: /api
-
+# MyBatis-Plus 配置
+mybatis-plus:
+  type-aliases-package: com.dswang.aiagent.entity
+  global-config:
+    db-config:
+      id-type: auto  # 主键自增
+      logic-delete-field: deleted  # 逻辑删除字段
+      logic-delete-value: 1  # 已删除
+      logic-not-delete-value: 0  # 未删除
+    banner: false  # 关闭 MyBatis-Plus banner
+  configuration:
+    map-underscore-to-camel-case: true  # 下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印 SQL
+    cache-enabled: false
 

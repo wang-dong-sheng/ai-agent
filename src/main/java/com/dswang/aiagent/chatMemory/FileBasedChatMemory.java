@@ -34,6 +34,8 @@ import java.util.List;
 public class FileBasedChatMemory implements ChatMemory {
 
     private final String BASE_DIR;
+
+    //序列化和反序列化所用
     private static final Kryo kryo = new Kryo();
 
     static {
