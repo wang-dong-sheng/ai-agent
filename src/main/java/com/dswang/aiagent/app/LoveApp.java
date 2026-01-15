@@ -5,19 +5,17 @@ package com.dswang.aiagent.app;/**
 
 import com.dswang.aiagent.advisor.MyLoggerAdvisor;
 import com.dswang.aiagent.chatMemory.FileBasedChatMemory;
-import com.dswang.aiagent.chatMemory.MysqlChatMemory;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -38,28 +36,21 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 public class LoveApp {
 
 
-    private ChatClient chatClient;
-    @Resource
+    private final ChatClient chatClient;
+    @Resource(name = "pgVectorVectorStore")
     private VectorStore loveAppVectorStore;
-    @Resource
-    private MysqlChatMemory mysqlChatMemory;
+//
+//    private MysqlChatMemory mysqlChatMemory;    @Resource
 
     @Resource
     private Advisor loveAppRagCloudAdvisor;
-    
-    @Autowired
-    private ChatModel dashscopeChatModel;
 
     private static final String SYSTEM_PROMPT = "扮演深耕恋爱心理领域的专家。开场向用户表明身份，告知用户可倾诉恋爱难题。" +
             "围绕单身、恋爱、已婚三种状态提问：单身状态询问社交圈拓展及追求心仪对象的困扰；" +
             "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
             "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
-    public LoveApp() {
-    }
-    
-    @PostConstruct
-    public void init() {
+    public LoveApp(ChatModel dashscopeChatModel) {
         // 初始化基于内存的对话记忆
         ChatMemory chatMemory = new InMemoryChatMemory();
 //        基于文件的持久化
@@ -69,7 +60,7 @@ public class LoveApp {
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
-                        new MessageChatMemoryAdvisor(mysqlChatMemory),
+                        new MessageChatMemoryAdvisor(fileBasedChatMemory),
 //                        自定义日志拦截器
                         new MyLoggerAdvisor()
 ////                        自定义增强Advisor
@@ -130,7 +121,7 @@ public class LoveApp {
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
                 .advisors(new MyLoggerAdvisor())
-//                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 .advisors(loveAppRagCloudAdvisor)
                 .call()
                 .chatResponse();
@@ -139,3 +130,5 @@ public class LoveApp {
         return content;
     }
 }
+
+

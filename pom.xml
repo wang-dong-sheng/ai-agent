@@ -106,28 +106,49 @@
 			<version>1.0.0-M6</version>
 		</dependency>
 
+		<!--向量数据库连接-->
+		<!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-starter-vector-store-pgvector -->
+		<!-- 先添加 JDBC starter，确保 JdbcTemplateAutoConfiguration 可用 -->
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.28</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- 使用单一版本的 pgvector store，避免版本冲突 -->
 		<dependency>
-			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-			<version>3.5.12</version>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-pgvector-store</artifactId>
+			<version>1.0.0-M6</version>
 		</dependency>
-		<dependency>
-			<groupId>org.freemarker</groupId>
-			<artifactId>freemarker</artifactId>
-			<version>2.3.32</version>
-		</dependency>
+
+
+<!--		<dependency>-->
+<!--			<groupId>mysql</groupId>-->
+<!--			<artifactId>mysql-connector-java</artifactId>-->
+<!--			<version>8.0.28</version>-->
+<!--			<scope>runtime</scope>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>com.baomidou</groupId>-->
+<!--			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>-->
+<!--			<version>3.5.12</version>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.freemarker</groupId>-->
+<!--			<artifactId>freemarker</artifactId>-->
+<!--			<version>2.3.32</version>-->
+<!--		</dependency>-->
 
 		<!-- AOP and AspectJ support -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
+
 
 	</dependencies>
 
