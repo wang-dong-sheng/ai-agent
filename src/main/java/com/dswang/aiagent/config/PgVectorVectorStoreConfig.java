@@ -21,7 +21,7 @@ public class PgVectorVectorStoreConfig {
                 .dimensions(1536)                    // Optional: defaults to model dimensions or 1536
                 .distanceType(COSINE_DISTANCE)       // Optional: defaults to COSINE_DISTANCE
                 .indexType(HNSW)                     // Optional: defaults to HNSW
-                .initializeSchema(true)              // Optional: defaults to false
+                .initializeSchema(true)              // 数据库中如果没有表结构则自动创建
                 .schemaName("public")                // Optional: defaults to "public"
                 .vectorTableName("agent")     // Optional: defaults to "vector_store"
                 .maxDocumentBatchSize(10000)         // Optional: defaults to 10000

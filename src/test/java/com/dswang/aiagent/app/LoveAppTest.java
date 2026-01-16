@@ -12,7 +12,6 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
 import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
@@ -39,11 +38,10 @@ class LoveAppTest {
     @Resource
     private MySummaryEnricher mySummaryEnricher;
 
+
     @Resource(name = "pgVectorVectorStore")
     private VectorStore vectorStore;
 
-    @Resource
-    private JdbcTemplate jdbcTemplate;
 
     @Test
     void doChat() {
@@ -95,8 +93,18 @@ class LoveAppTest {
     void doChatWithRag() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="我是已婚人士，我应该怎么处理好伴侣关系，我该怎么办";
+        String massage="我已经结婚了，我要怎么搞呀，才能搞好这段关系";
         String s = loveApp.doChatWithRag(massage, appId);
+        Assertions.assertNotNull(s);
+
+    }
+
+    @Test
+    void doChatWithRAA() {
+        String appId = UUID.randomUUID().toString();
+//        第一轮
+        String massage="给我分析一下国际情势";
+        String s = loveApp.doChatWithRagRAA(massage, appId);
         Assertions.assertNotNull(s);
 
     }
@@ -148,6 +156,7 @@ class LoveAppTest {
         }
     }
 
+//    向量数据库基本查询使用
     @Test
     void testSearch() {
         SearchRequest request = SearchRequest.builder()
@@ -159,6 +168,18 @@ class LoveAppTest {
 
         List<Document> results = vectorStore.similaritySearch(request);
         log.info("搜索结果: {}", results);
+
+    }
+
+    @Test
+     void testQuery(){
+//        Query query = new Query("啥是程序员鱼皮啊啊啊啊？");
+
+//        QueryTransformer queryTransformer = RewriteQueryTransformer.builder()
+//                .chatClientBuilder()
+//                .build();
+//
+//        Query transformedQuery = queryTransformer.transform(query);
 
     }
 }

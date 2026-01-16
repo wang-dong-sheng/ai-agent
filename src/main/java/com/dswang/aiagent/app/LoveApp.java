@@ -5,16 +5,20 @@ package com.dswang.aiagent.app;/**
 
 import com.dswang.aiagent.advisor.MyLoggerAdvisor;
 import com.dswang.aiagent.chatMemory.FileBasedChatMemory;
+import com.dswang.aiagent.rag.QueryRewriter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
+import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -37,8 +41,13 @@ public class LoveApp {
 
 
     private final ChatClient chatClient;
+    private final ChatClient.Builder chatClientBuilder;
     @Resource(name = "pgVectorVectorStore")
     private VectorStore loveAppVectorStore;
+
+    @Resource
+    private QueryRewriter queryRewriter;
+
 //
 //    private MysqlChatMemory mysqlChatMemory;    @Resource
 
@@ -51,13 +60,11 @@ public class LoveApp {
             "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
     public LoveApp(ChatModel dashscopeChatModel) {
-        // 初始化基于内存的对话记忆
-        ChatMemory chatMemory = new InMemoryChatMemory();
 //        基于文件的持久化
         String fileDir = System.getProperty("user.dir")+"/temp/chat-memory";
         FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(fileDir);
 //        MysqlChatMemory mysqlChatMemory=new MysqlChatMemory();
-        chatClient = ChatClient.builder(dashscopeChatModel)
+        chatClientBuilder = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
                         new MessageChatMemoryAdvisor(fileBasedChatMemory),
@@ -66,7 +73,8 @@ public class LoveApp {
 ////                        自定义增强Advisor
 //                        new ReReadingAdvisor()
                 )
-                .build();
+                ;
+        chatClient = chatClientBuilder.build();
     }
 
     //快速定义一个类
@@ -115,19 +123,58 @@ public class LoveApp {
     }
 
     public String doChatWithRag(String message, String chatId) {
+
+        //1.对用户消息进行重写，专业化，让大模型更容易理解
+
+        String transMessage = queryRewriter.doQueryRewrite(message);
+        // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(transMessage)
+                .topK(5)
+                .build();
+
         ChatResponse response = chatClient
                 .prompt()
-                .user(message)
+                .user(transMessage)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
                 .advisors(new MyLoggerAdvisor())
-                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
-                .advisors(loveAppRagCloudAdvisor)
+                // 基于本地向量库（pgvector）的 RAG，并指定检索 top 5
+                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore, searchRequest))
                 .call()
                 .chatResponse();
         String content = response.getResult().getOutput().getText();
         log.info("content: {}", content);
         return content;
+    }
+
+
+    public String doChatWithRagRAA(String message, String chatId) {
+        // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
+        //使用大模型对用户问题进行改写
+        Advisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+                .queryTransformers(RewriteQueryTransformer.builder()
+                        .chatClientBuilder(chatClientBuilder.build().mutate())
+                        .build())
+                .documentRetriever(VectorStoreDocumentRetriever.builder()
+                        .similarityThreshold(0.50)
+                        .vectorStore(loveAppVectorStore)
+                        .build())
+                .queryAugmenter(ContextualQueryAugmenter.builder()
+                        .allowEmptyContext(true)
+                        .build())
+                .build();
+
+
+        String answer = chatClient.prompt()
+                .advisors(retrievalAugmentationAdvisor)
+                .user(message)
+                .call()
+                .content();
+
+
+
+        return answer;
     }
 }
 
