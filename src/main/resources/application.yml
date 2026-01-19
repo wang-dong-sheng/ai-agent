@@ -27,6 +27,8 @@ logging:
   level:
     org.springframework.beans: DEBUG
     com.alibaba.cloud.nacos: WARN
+    org.springframework.ai: DEBUG
+
 
 
 # springdoc-openapi????
