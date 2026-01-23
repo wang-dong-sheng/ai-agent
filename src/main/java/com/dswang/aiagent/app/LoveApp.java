@@ -183,8 +183,15 @@ public class LoveApp {
 
 
     public String doChatWithTools(String message, String chatId) {
+        String TOOLS_GUARDRAIL = """
+                你可以调用工具来完成任务，但必须遵守以下规则：
+                - 最多调用工具 3 次（总次数，不是每个工具）。
+                - 工具返回后必须先总结要点，再给出最终可执行的答案；不要重复搜索/抓取同一件事。
+                - 如果工具连续返回错误、或信息不足以继续：直接给出不依赖工具的备选方案，并调用 doTerminate 结束。
+                """;
         ChatResponse response = chatClient
                 .prompt()
+                .system(TOOLS_GUARDRAIL)
                 .user(message)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 2))
