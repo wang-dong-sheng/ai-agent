@@ -4,7 +4,7 @@ package com.dswang.aiagent.app;/**
  */
 
 import com.dswang.aiagent.advisor.MyLoggerAdvisor;
-import com.dswang.aiagent.chatMemory.FileBasedChatMemory;
+import com.dswang.aiagent.chatMemory.PostgresChatMemory;
 import com.dswang.aiagent.rag.QueryRewriter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -63,19 +63,20 @@ public class LoveApp {
             "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
             "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
-    public LoveApp(ChatModel dashscopeChatModel) {
-//        基于文件的持久化
-        String fileDir = System.getProperty("user.dir")+"/temp/chat-memory";
-        FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(fileDir);
-//        MysqlChatMemory mysqlChatMemory=new MysqlChatMemory();
+    public LoveApp(ChatModel dashscopeChatModel, PostgresChatMemory postgresChatMemory) {
+        // 使用PostgreSQL数据库持久化聊天记录
+        // 如果需要切换回文件存储，可以取消下面的注释，并注释掉postgresChatMemory相关代码
+        // String fileDir = System.getProperty("user.dir")+"/temp/chat-memory";
+        // FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(fileDir);
+        
         chatClientBuilder = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
-                        new MessageChatMemoryAdvisor(fileBasedChatMemory),
-//                        自定义日志拦截器
+                        new MessageChatMemoryAdvisor(postgresChatMemory),
+                        // 自定义日志拦截器
                         new MyLoggerAdvisor()
-////                        自定义增强Advisor
-//                        new ReReadingAdvisor()
+                        // 自定义增强Advisor
+                        // new ReReadingAdvisor()
                 )
                 ;
         chatClient = chatClientBuilder.build();
@@ -186,6 +187,7 @@ public class LoveApp {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
+                - 调用工具时分析用户语言，采用最核心的工具最先调用原则
                 - 工具返回后必须先总结要点，再给出最终可执行的答案；不要重复搜索/抓取同一件事。
                 - 如果工具连续返回错误、或信息不足以继续：直接给出不依赖工具的备选方案，并调用 doTerminate 结束。
                 """;

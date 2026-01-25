@@ -4,14 +4,7 @@ package com.dswang.aiagent.rag;/**
  */
 
 import jakarta.annotation.Resource;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  *@ClassName LoveAppVectorStoreConfig
@@ -24,13 +17,13 @@ import java.util.List;
 public class LoveAppVectorStoreConfig {
     @Resource
     private LoveAppDocumentLoader loveAppDocumentLoader;
-    @Bean
-     VectorStore loveAppVectorStore(EmbeddingModel embeddingModel){
-        List<Document> documentList = loveAppDocumentLoader.loadDocument();
-        SimpleVectorStore simpleVectorStore= SimpleVectorStore.builder(embeddingModel).build();
-        simpleVectorStore.doAdd(documentList);
-        return simpleVectorStore;
-    }
+//    @Bean
+//     VectorStore loveAppVectorStore(EmbeddingModel embeddingModel){
+//        List<Document> documentList = loveAppDocumentLoader.loadDocument();
+//        SimpleVectorStore simpleVectorStore= SimpleVectorStore.builder(embeddingModel).build();
+//        simpleVectorStore.doAdd(documentList);
+//        return simpleVectorStore;
+//    }
 }
 
 
