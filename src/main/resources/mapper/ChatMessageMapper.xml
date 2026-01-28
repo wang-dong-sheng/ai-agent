@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dswang.aiagent.mapper.ChatMessageMapper">
+
+    <resultMap id="ChatMessageResultMap" type="com.dswang.aiagent.domain.ChatMessage">
+        <id property="id" column="id"/>
+        <result property="conversationId" column="conversation_id"/>
+        <result property="messageType" column="message_type"/>
+        <result property="content" column="content"/>
+        <result property="metadata" column="metadata"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, conversation_id, message_type, content, metadata, created_at, updated_at
+    </sql>
+
+    <insert id="insert" parameterType="com.dswang.aiagent.domain.ChatMessage">
+        INSERT INTO chat_messages (conversation_id, message_type, content, metadata, created_at, updated_at)
+        VALUES (
+            #{conversationId},
+            #{messageType},
+            #{content},
+            CAST(#{metadata,jdbcType=OTHER} AS jsonb),
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <insert id="insertBatch">
+        INSERT INTO chat_messages (conversation_id, message_type, content, metadata, created_at, updated_at)
+        VALUES
+        <foreach collection="messages" item="m" separator=",">
+            (
+                #{m.conversationId},
+                #{m.messageType},
+                #{m.content},
+                CAST(#{m.metadata,jdbcType=OTHER} AS jsonb),
+                #{m.createdAt},
+                #{m.updatedAt}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectAllByConversationId" resultMap="ChatMessageResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM chat_messages
+        WHERE conversation_id = #{conversationId}
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="selectLatestByConversationId" resultMap="ChatMessageResultMap">
+        SELECT <include refid="BaseColumns"/> FROM (
+            SELECT <include refid="BaseColumns"/>
+            FROM chat_messages
+            WHERE conversation_id = #{conversationId}
+            ORDER BY created_at DESC
+            LIMIT #{limit}
+        ) t
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="countByConversationId" resultType="long">
+        SELECT COUNT(*)
+        FROM chat_messages
+        WHERE conversation_id = #{conversationId}
+    </select>
+
+    <delete id="deleteByConversationId">
+        DELETE FROM chat_messages
+        WHERE conversation_id = #{conversationId}
+    </delete>
+
+</mapper>
+
