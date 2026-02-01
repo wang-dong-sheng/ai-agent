@@ -6,13 +6,15 @@ spring:
 #    username: root
 #    password: 123456789
 #    driver-class-name: com.mysql.cj.jdbc.Driver
-#  sql:
-#    init:
-#      mode: never
   datasource:
     url: jdbc:postgresql://127.0.0.1:5432/agent
     username: root
     password: 123456789
+    driver-class-name: org.postgresql.Driver
+#  sql:
+#    init:
+#      mode: always
+#      schema-locations: classpath:sql/chat_messages.sql
   ai:
     vectorstore:
       pgvector:
@@ -20,6 +22,11 @@ spring:
         dimensions: 1536
         distance-type: COSINE_DISTANCE
         max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+    mcp:
+      client:
+        stdio:
+          servers-configuration: classpath:mcp-servers.json
+
 
 
 # 额外的类型推断配置
@@ -60,4 +67,5 @@ mybatis:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     cache-enabled: false
+
 

@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest
 class LoveAppDocumentLoaderTest {
-
     @Resource
     private LoveAppDocumentLoader loveAppDocumentLoader;
     @Test

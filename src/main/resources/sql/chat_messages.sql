@@ -32,18 +32,3 @@ COMMENT ON COLUMN chat_messages.content IS '消息文本内容';
 COMMENT ON COLUMN chat_messages.metadata IS '消息元数据，JSON格式，可存储消息的额外信息';
 COMMENT ON COLUMN chat_messages.created_at IS '消息创建时间';
 COMMENT ON COLUMN chat_messages.updated_at IS '消息更新时间';
-
--- 创建更新时间触发器函数（可选，如果需要自动更新updated_at）
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- 创建触发器
-CREATE TRIGGER update_chat_messages_updated_at 
-    BEFORE UPDATE ON chat_messages 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();

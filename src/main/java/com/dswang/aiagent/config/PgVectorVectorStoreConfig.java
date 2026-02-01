@@ -15,7 +15,6 @@ import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgIndexT
 public class PgVectorVectorStoreConfig {
 
     @Bean
-    @Lazy  // 延迟初始化，避免启动时立即连接数据库
     public VectorStore pgVectorVectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel dashscopeEmbeddingModel) {
         VectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, dashscopeEmbeddingModel)
                 .dimensions(1536)                    // Optional: defaults to model dimensions or 1536

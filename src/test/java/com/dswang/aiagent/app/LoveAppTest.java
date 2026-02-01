@@ -14,8 +14,10 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -172,7 +174,7 @@ class LoveAppTest {
     }
 
     @Test
-     void testQuery(){
+    void testQuery(){
 //        Query query = new Query("啥是程序员鱼皮啊啊啊啊？");
 
 //        QueryTransformer queryTransformer = RewriteQueryTransformer.builder()
@@ -181,6 +183,65 @@ class LoveAppTest {
 //
 //        Query transformedQuery = queryTransformer.transform(query);
 
+    }
+
+    @Test
+    void testVectorStoreInitialization() {
+        try {
+            log.info("开始验证向量存储初始化...");
+            log.info("向量存储实例: {}", vectorStore);
+            log.info("向量存储类型: {}", vectorStore.getClass().getName());
+            
+            // 尝试执行一个简单的操作来触发初始化
+            log.info("尝试执行简单操作以触发表结构创建...");
+            
+            // 创建一个空的文档列表进行添加操作，这会触发表结构检查和创建
+            List<Document> emptyDocuments = new ArrayList<>();
+            vectorStore.add(emptyDocuments);
+            
+            log.info("向量存储初始化验证完成");
+        } catch (Exception e) {
+            log.error("向量存储初始化验证失败", e);
+            throw e;
+        }
+    }
+
+    @Test
+    void testTableStructureExists() {
+        try {
+            log.info("开始验证数据库表结构是否存在...");
+            
+            // 检查vectorStore的实际类型
+            log.info("向量存储实际类型: {}", vectorStore.getClass().getName());
+            
+            // 尝试添加一个实际的文档来强制初始化
+            List<Document> testDocuments = new ArrayList<>();
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("userId", "test123");
+            testDocuments.add(new Document("测试文档内容", metadata));
+            
+            log.info("添加测试文档以触发表结构创建...");
+            vectorStore.add(testDocuments);
+            log.info("测试文档添加完成");
+            
+            // 尝试查询以验证数据是否真的存储
+            SearchRequest request = SearchRequest.builder()
+                    .query("测试")
+                    .topK(1)
+                    .build();
+            
+            log.info("执行测试查询...");
+            List<Document> results = vectorStore.similaritySearch(request);
+            log.info("查询结果数量: {}", results.size());
+            if (!results.isEmpty()) {
+                log.info("查询结果: {}", results.get(0));
+            }
+            
+            log.info("表结构存在性验证完成");
+        } catch (Exception e) {
+            log.error("表结构存在性验证失败", e);
+            throw e;
+        }
     }
 
 
@@ -210,5 +271,26 @@ class LoveAppTest {
         String answer = loveApp.doChatWithTools(message, chatId);
         Assertions.assertNotNull(answer);
     }
+
+    @Test
+    void doChatWithMCP() {
+//        String chatId = UUID.randomUUID().toString();
+//        String message="找几个个上海浦东新区的羽毛球馆";
+//        String answer = loveApp.doChatWithMCP(message, chatId);
+//        Assertions.assertNotNull(answer);
+        String chatId = UUID.randomUUID().toString();
+        String message="帮我找几张关于如何让另一半开心的图片";
+        String answer = loveApp.doChatWithMCP(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
+
+    @Test
+    void doChatWithMCPStdio() {
+        String chatId = UUID.randomUUID().toString();
+        String message="帮我找几张关于如何让另一半开心的图片";
+        String answer = loveApp.doChatWithMCP(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
+
 
 }
