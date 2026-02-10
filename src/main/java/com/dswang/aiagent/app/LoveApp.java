@@ -71,7 +71,7 @@ public class LoveApp {
         // FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(fileDir);
         
         chatClientBuilder = ChatClient.builder(dashscopeChatModel)
-                .defaultSystem(SYSTEM_PROMPT)
+//                .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
                         new MessageChatMemoryAdvisor(postgresChatMemory),
                         // 自定义日志拦截器

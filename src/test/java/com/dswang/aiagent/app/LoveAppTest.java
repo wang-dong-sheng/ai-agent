@@ -1,5 +1,6 @@
 package com.dswang.aiagent.app;
 
+import com.dswang.aiagent.agent.YuManus;
 import com.dswang.aiagent.rag.LoveAppDocumentLoader;
 import com.dswang.aiagent.rag.etl.MyKeywordEnricher;
 import com.dswang.aiagent.rag.etl.MySummaryEnricher;
@@ -14,11 +15,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Mr.Wang
@@ -49,36 +46,36 @@ class LoveAppTest {
     void doChat() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="我是张三";
+        String massage = "我是张三";
         String answer = loveApp.doChat(massage, appId);
-        log.info("第一轮回答:{}",answer);
+        log.info("第一轮回答:{}", answer);
 //        第二轮
-        String massage2="我的爱人是李四";
+        String massage2 = "我的爱人是李四";
         String answer2 = loveApp.doChat(massage2, appId);
-        log.info("第二轮回答:{}",answer2);
+        log.info("第二轮回答:{}", answer2);
 //        第三轮
-        String massage3="我的另一半是什么来着？刚给你说过，帮我回忆一下";
+        String massage3 = "我的另一半是什么来着？刚给你说过，帮我回忆一下";
         String answer3 = loveApp.doChat(massage3, appId);
-        log.info("第三轮回答:{}",answer3);
+        log.info("第三轮回答:{}", answer3);
 
 
     }
 
     @Test
-    void doChatWithReport(){
+    void doChatWithReport() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="你好我是张三，我想让我的另一半李四更爱我，我该怎么办";
+        String massage = "你好我是张三，我想让我的另一半李四更爱我，我该怎么办";
         LoveApp.LoveReport loveReport = loveApp.doChatWithReport(massage, appId);
         Assertions.assertNotNull(loveReport);
     }
 
 
     @Test
-    void doChatStreamWithReport(){
+    void doChatStreamWithReport() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="你好我是张三，我想让我的另一半李四更爱我，我该怎么办";
+        String massage = "你好我是张三，我想让我的另一半李四更爱我，我该怎么办";
         StringBuilder result = new StringBuilder();
         Flux<String> stringFlux = loveApp.doChatStreamWithReport(massage, appId);
         stringFlux.doOnNext(chunk -> {
@@ -95,7 +92,7 @@ class LoveAppTest {
     void doChatWithRag() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="我已经结婚了，我要怎么搞呀，才能搞好这段关系";
+        String massage = "我已经结婚了，我要怎么搞呀，才能搞好这段关系";
         String s = loveApp.doChatWithRag(massage, appId);
         Assertions.assertNotNull(s);
 
@@ -105,7 +102,7 @@ class LoveAppTest {
     void doChatWithRAA() {
         String appId = UUID.randomUUID().toString();
 //        第一轮
-        String massage="给我分析一下国际情势";
+        String massage = "给我分析一下国际情势";
         String s = loveApp.doChatWithRagRAA(massage, appId);
         Assertions.assertNotNull(s);
 
@@ -132,7 +129,7 @@ class LoveAppTest {
 
             HashMap<String, String> addMeteData = new HashMap<>();
             addMeteData.put("userId", "123456789");
-            List<Document> enrichDocuments1 = mySummaryEnricher.enrichDocuments(transDocumentList,addMeteData);
+            List<Document> enrichDocuments1 = mySummaryEnricher.enrichDocuments(transDocumentList, addMeteData);
 
             // 2. 将文档添加到向量数据库
             log.info("开始将文档存入向量数据库...");
@@ -158,7 +155,7 @@ class LoveAppTest {
         }
     }
 
-//    向量数据库基本查询使用
+    //    向量数据库基本查询使用
     @Test
     void testSearch() {
         SearchRequest request = SearchRequest.builder()
@@ -174,7 +171,7 @@ class LoveAppTest {
     }
 
     @Test
-    void testQuery(){
+    void testQuery() {
 //        Query query = new Query("啥是程序员鱼皮啊啊啊啊？");
 
 //        QueryTransformer queryTransformer = RewriteQueryTransformer.builder()
@@ -191,14 +188,14 @@ class LoveAppTest {
             log.info("开始验证向量存储初始化...");
             log.info("向量存储实例: {}", vectorStore);
             log.info("向量存储类型: {}", vectorStore.getClass().getName());
-            
+
             // 尝试执行一个简单的操作来触发初始化
             log.info("尝试执行简单操作以触发表结构创建...");
-            
+
             // 创建一个空的文档列表进行添加操作，这会触发表结构检查和创建
             List<Document> emptyDocuments = new ArrayList<>();
             vectorStore.add(emptyDocuments);
-            
+
             log.info("向量存储初始化验证完成");
         } catch (Exception e) {
             log.error("向量存储初始化验证失败", e);
@@ -210,33 +207,33 @@ class LoveAppTest {
     void testTableStructureExists() {
         try {
             log.info("开始验证数据库表结构是否存在...");
-            
+
             // 检查vectorStore的实际类型
             log.info("向量存储实际类型: {}", vectorStore.getClass().getName());
-            
+
             // 尝试添加一个实际的文档来强制初始化
             List<Document> testDocuments = new ArrayList<>();
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("userId", "test123");
             testDocuments.add(new Document("测试文档内容", metadata));
-            
+
             log.info("添加测试文档以触发表结构创建...");
             vectorStore.add(testDocuments);
             log.info("测试文档添加完成");
-            
+
             // 尝试查询以验证数据是否真的存储
             SearchRequest request = SearchRequest.builder()
                     .query("测试")
                     .topK(1)
                     .build();
-            
+
             log.info("执行测试查询...");
             List<Document> results = vectorStore.similaritySearch(request);
             log.info("查询结果数量: {}", results.size());
             if (!results.isEmpty()) {
                 log.info("查询结果: {}", results.get(0));
             }
-            
+
             log.info("表结构存在性验证完成");
         } catch (Exception e) {
             log.error("表结构存在性验证失败", e);
@@ -279,7 +276,7 @@ class LoveAppTest {
 //        String answer = loveApp.doChatWithMCP(message, chatId);
 //        Assertions.assertNotNull(answer);
         String chatId = UUID.randomUUID().toString();
-        String message="帮我找几张关于如何让另一半开心的图片";
+        String message = "帮我找几张关于如何让另一半开心的图片";
         String answer = loveApp.doChatWithMCP(message, chatId);
         Assertions.assertNotNull(answer);
     }
@@ -287,8 +284,22 @@ class LoveAppTest {
     @Test
     void doChatWithMCPStdio() {
         String chatId = UUID.randomUUID().toString();
-        String message="帮我找几张关于如何让另一半开心的图片";
+        String message = "帮我找几张关于如何让另一半开心的图片";
         String answer = loveApp.doChatWithMCP(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
+
+
+    @Resource
+    private YuManus yuManus;
+
+    @Test
+    void manusTest() {
+        String userPrompt = """  
+                我的另一半居住在上海静安区，请帮我找到 5 公里内合适的约会地点，  
+                并结合一些网络图片，制定一份详细的约会计划，  
+                并以 PDF 格式输出""";
+        String answer = yuManus.run(userPrompt);
         Assertions.assertNotNull(answer);
     }
 
