@@ -182,6 +182,11 @@
 			<version>1.0.0-M6</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+		</dependency>
+
 
 
 	</dependencies>

@@ -7,6 +7,8 @@ import org.jsoup.internal.StringUtil;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,7 @@ public abstract class BaseAgent {
     private AgentState state = AgentState.IDLE;
   
     // 执行控制  
-    private int maxSteps = 10;  
+    private int maxSteps = 5;
     private int currentStep = 0;  
   
     // LLM  
@@ -84,8 +86,52 @@ public abstract class BaseAgent {
             // 清理资源  
             this.cleanup();  
         }  
-    }  
-  
+    }
+
+    public Flux<String> runAsync(String userPrompt) {
+        // 参数校验
+        if (this.state != AgentState.IDLE) {
+            return Flux.error(new RuntimeException("Cannot run agent from state: " + this.state));
+        }
+        if (StringUtil.isBlank(userPrompt)) {
+            return Flux.error(new RuntimeException("Cannot run agent with empty user prompt"));
+        }
+
+        // 初始化状态
+        state = AgentState.RUNNING;
+        messageList.add(new UserMessage(userPrompt));
+
+        // 创建一个 Flux 流，用于逐个发射步骤结果
+        return Flux.range(0, maxSteps)
+                .takeWhile(i -> state != AgentState.FINISHED) // 控制循环条件
+                .concatMap(i -> {
+                    int stepNumber = i + 1;
+                    currentStep = stepNumber;
+                    log.info("Executing step " + stepNumber + "/" + maxSteps);
+
+                    // 执行单步逻辑并返回结果
+                    return Mono.fromCallable(() -> step())
+                            .map(stepResult -> "Step " + stepNumber + ": " + stepResult)
+                            .doOnNext(result -> {
+                                // 可选：在这里添加中间结果的处理逻辑
+                            })
+                            .onErrorResume(e -> {
+                                // 异常处理
+                                state = AgentState.ERROR;
+                                log.error("Error executing agent", e);
+                                return Mono.just("执行错误: " + e.getMessage());
+                            });
+                })
+                .doFinally(signalType -> {
+                    // 最终清理资源
+                    cleanup();
+                    if (currentStep >= maxSteps) {
+                        state = AgentState.FINISHED;
+                    }
+                });
+    }
+
+
     /**  
      * 执行单个步骤  
      *  

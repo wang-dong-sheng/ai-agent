@@ -154,6 +154,30 @@ public class LoveApp {
         return content;
     }
 
+    public Flux<String> doChatWithRagStream(String message, String chatId) {
+
+        //1.对用户消息进行重写，专业化，让大模型更容易理解
+
+        String transMessage = queryRewriter.doQueryRewrite(message);
+        // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(transMessage)
+                .topK(5)
+                .build();
+
+        return chatClient
+                .prompt()
+                .user(transMessage)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(new MyLoggerAdvisor())
+                // 基于本地向量库（pgvector）的 RAG，并指定检索 top 5
+                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore, searchRequest))
+                .stream()
+                .content();
+
+    }
+
 
     public String doChatWithRagRAA(String message, String chatId) {
         // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
@@ -183,7 +207,28 @@ public class LoveApp {
         return answer;
     }
 
-
+    public Flux<String> doChatWithToolsStream(String message, String chatId) {
+        String TOOLS_GUARDRAIL = """
+                你可以调用工具来完成任务，但必须遵守以下规则：
+                - 最多调用工具 3 次（总次数，不是每个工具）。
+                - 调用工具时分析用户语言，采用最核心的工具最先调用原则
+                - 工具返回后必须先总结要点，再给出最终可执行的答案；不要重复搜索/抓取同一件事。
+                - 如果工具连续返回错误、或信息不足以继续：直接给出不依赖工具的备选方案，并调用 doTerminate 结束。
+                """;
+        Flux<String> content = chatClient
+                .prompt()
+                .system(TOOLS_GUARDRAIL)
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 2))
+                .advisors(new MyLoggerAdvisor())
+                .tools(allTools)
+                .stream()
+                .content();
+//        String content = response.getResult().getOutput().getText();
+//        log.info("content: {}", content);
+        return content;
+    }
     public String doChatWithTools(String message, String chatId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
