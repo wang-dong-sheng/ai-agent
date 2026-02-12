@@ -45,30 +45,30 @@ public class AiController {
     }
 
     @GetMapping(value = "/love_app/chat/tool/sse")
-    public Flux<ServerSentEvent<String>> doChatWithLoveAppSSE(@RequestParam("message") String message, 
-                                                             @RequestParam("chatId") String chatId, 
+    public Flux<ServerSentEvent<String>> doChatWithLoveAppSSE(@RequestParam("message") String message,
+                                                             @RequestParam("chatId") String chatId,
                                                              @RequestParam("userId") Long userId) {
-        postgresChatMemory.setCurrentUserId(userId);
+        postgresChatMemory.setConversationUserId(chatId, userId);
         return loveApp.doChatWithToolsStream(message, chatId, userId)
                 .map(chunk -> ServerSentEvent.<String>builder()
                         .data(chunk)
                         .build())
                 .doFinally(signalType -> {
-                    postgresChatMemory.clearCurrentUserId();
+                    postgresChatMemory.clearConversationUserId(chatId);
                 });
     }
 
     @GetMapping(value = "/love_app/chat/agent/sse")
-    public Flux<ServerSentEvent<String>> doChatWithRagStream(@RequestParam("message") String message, 
-                                                            @RequestParam("chatId") String chatId, 
+    public Flux<ServerSentEvent<String>> doChatWithRagStream(@RequestParam("message") String message,
+                                                            @RequestParam("chatId") String chatId,
                                                             @RequestParam("userId") Long userId) {
-        postgresChatMemory.setCurrentUserId(userId);
+        postgresChatMemory.setConversationUserId(chatId, userId);
         return loveApp.doChatWithRagStream(message, chatId, userId)
                 .map(chunk -> ServerSentEvent.<String>builder()
                         .data(chunk)
                         .build())
                 .doFinally(signalType -> {
-                    postgresChatMemory.clearCurrentUserId();
+                    postgresChatMemory.clearConversationUserId(chatId);
                 });
     }
 //

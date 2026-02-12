@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 基于PostgreSQL持久化的对话记忆
@@ -31,6 +32,7 @@ public class PostgresChatMemory implements ChatMemory {
     private final ChatMessageService chatMessageService;
     private final ObjectMapper objectMapper;
     private final InheritableThreadLocal<Long> currentUserId = new InheritableThreadLocal<>();
+    private final Map<String, Long> conversationToUserMap = new ConcurrentHashMap<>();
 
     public PostgresChatMemory(ChatMessageService chatMessageService) {
         this.chatMessageService = chatMessageService;
@@ -38,17 +40,31 @@ public class PostgresChatMemory implements ChatMemory {
     }
 
     /**
-     * 设置当前用户ID
+     * 设置当前用户ID（兼容旧代码）
      */
     public void setCurrentUserId(Long userId) {
         currentUserId.set(userId);
     }
 
     /**
-     * 清除当前用户ID
+     * 清除当前用户ID（兼容旧代码）
      */
     public void clearCurrentUserId() {
         currentUserId.remove();
+    }
+
+    /**
+     * 设置会话对应的用户ID
+     */
+    public void setConversationUserId(String conversationId, Long userId) {
+        conversationToUserMap.put(conversationId, userId);
+    }
+
+    /**
+     * 清除会话对应的用户ID
+     */
+    public void clearConversationUserId(String conversationId) {
+        conversationToUserMap.remove(conversationId);
     }
 
     @Override
@@ -59,8 +75,11 @@ public class PostgresChatMemory implements ChatMemory {
 
         List<ChatMessage> chatMessages = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
-        // todo 获取不到UserId
-        Long userId = currentUserId.get();
+        // 优先从conversationToUserMap获取userId，如果没有则从ThreadLocal获取
+        Long userId = conversationToUserMap.get(conversationId);
+        if (userId == null) {
+            userId = currentUserId.get();
+        }
 
         for (Message message : messages) {
             ChatMessage chatMessage = convertToChatMessage(conversationId, message, now, userId);
@@ -69,7 +88,7 @@ public class PostgresChatMemory implements ChatMemory {
 
         try {
             chatMessageService.saveAll(chatMessages);
-            log.debug("Saved {} messages for conversation: {}", chatMessages.size(), conversationId);
+            log.debug("Saved {} messages for conversation: {}, userId: {}", chatMessages.size(), conversationId, userId);
         } catch (Exception e) {
             log.error("Failed to save messages for conversation: {}", conversationId, e);
             throw new RuntimeException("Failed to save chat messages", e);

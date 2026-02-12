@@ -165,6 +165,7 @@ public class LoveApp {
                 .topK(5)
                 .build();
 
+        // 获取 PostgresChatMemory 实例来设置 userId
         return chatClient
                 .prompt()
                 .user(transMessage)
