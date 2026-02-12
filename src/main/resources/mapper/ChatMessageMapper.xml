@@ -7,6 +7,7 @@
 
     <resultMap id="ChatMessageResultMap" type="com.dswang.aiagent.domain.ChatMessage">
         <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
         <result property="conversationId" column="conversation_id"/>
         <result property="messageType" column="message_type"/>
         <result property="content" column="content"/>
@@ -16,12 +17,13 @@
     </resultMap>
 
     <sql id="BaseColumns">
-        id, conversation_id, message_type, content, metadata, created_at, updated_at
+        id, user_id, conversation_id, message_type, content, metadata, created_at, updated_at
     </sql>
 
     <insert id="insert" parameterType="com.dswang.aiagent.domain.ChatMessage">
-        INSERT INTO chat_messages (conversation_id, message_type, content, metadata, created_at, updated_at)
+        INSERT INTO chat_messages (user_id, conversation_id, message_type, content, metadata, created_at, updated_at)
         VALUES (
+            #{userId},
             #{conversationId},
             #{messageType},
             #{content},
@@ -32,10 +34,11 @@
     </insert>
 
     <insert id="insertBatch">
-        INSERT INTO chat_messages (conversation_id, message_type, content, metadata, created_at, updated_at)
+        INSERT INTO chat_messages (user_id, conversation_id, message_type, content, metadata, created_at, updated_at)
         VALUES
         <foreach collection="messages" item="m" separator=",">
             (
+                #{m.userId},
                 #{m.conversationId},
                 #{m.messageType},
                 #{m.content},
@@ -53,6 +56,13 @@
         ORDER BY created_at ASC
     </select>
 
+    <select id="selectAllByUserIdAndConversationId" resultMap="ChatMessageResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM chat_messages
+        WHERE user_id = #{userId} AND conversation_id = #{conversationId}
+        ORDER BY created_at ASC
+    </select>
+
     <select id="selectLatestByConversationId" resultMap="ChatMessageResultMap">
         SELECT <include refid="BaseColumns"/> FROM (
             SELECT <include refid="BaseColumns"/>
@@ -62,6 +72,14 @@
             LIMIT #{limit}
         ) t
         ORDER BY created_at ASC
+    </select>
+
+    <select id="selectConversationsByUserId" resultType="string">
+        SELECT conversation_id
+        FROM chat_messages
+        WHERE user_id = #{userId}
+        GROUP BY conversation_id
+        ORDER BY MAX(created_at) DESC
     </select>
 
     <select id="countByConversationId" resultType="long">

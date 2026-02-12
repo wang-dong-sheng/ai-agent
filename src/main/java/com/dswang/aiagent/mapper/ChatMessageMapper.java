@@ -19,8 +19,13 @@ public interface ChatMessageMapper {
 
     List<ChatMessage> selectAllByConversationId(@Param("conversationId") String conversationId);
 
+    List<ChatMessage> selectAllByUserIdAndConversationId(@Param("userId") Long userId,
+                                                         @Param("conversationId") String conversationId);
+
     List<ChatMessage> selectLatestByConversationId(@Param("conversationId") String conversationId,
                                                    @Param("limit") int limit);
+
+    List<String> selectConversationsByUserId(@Param("userId") Long userId);
 
     long countByConversationId(@Param("conversationId") String conversationId);
 

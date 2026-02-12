@@ -91,7 +91,7 @@ public class LoveApp {
      * @param chatId
      * @return
      */
-    public LoveReport doChatWithReport(String message, String chatId) {
+    public LoveReport doChatWithReport(String message, String chatId, Long userId) {
         LoveReport loveReport = chatClient
                 .prompt()
                 .user(message)
@@ -103,7 +103,7 @@ public class LoveApp {
         return loveReport;
     }
 
-    public Flux<String> doChatStreamWithReport(String message, String chatId) {
+    public Flux<String> doChatStreamWithReport(String message, String chatId, Long userId) {
         Flux<String> content = chatClient
                 .prompt()
                 .user(message)
@@ -115,7 +115,7 @@ public class LoveApp {
     }
 
 
-    public String doChat(String message, String chatId) {
+    public String doChat(String message, String chatId, Long userId) {
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
@@ -128,7 +128,7 @@ public class LoveApp {
         return content;
     }
 
-    public String doChatWithRag(String message, String chatId) {
+    public String doChatWithRag(String message, String chatId, Long userId) {
 
         //1.对用户消息进行重写，专业化，让大模型更容易理解
 
@@ -154,7 +154,7 @@ public class LoveApp {
         return content;
     }
 
-    public Flux<String> doChatWithRagStream(String message, String chatId) {
+    public Flux<String> doChatWithRagStream(String message, String chatId, Long userId) {
 
         //1.对用户消息进行重写，专业化，让大模型更容易理解
 
@@ -179,7 +179,7 @@ public class LoveApp {
     }
 
 
-    public String doChatWithRagRAA(String message, String chatId) {
+    public String doChatWithRagRAA(String message, String chatId, Long userId) {
         // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
         //使用大模型对用户问题进行改写
         Advisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
@@ -207,7 +207,7 @@ public class LoveApp {
         return answer;
     }
 
-    public Flux<String> doChatWithToolsStream(String message, String chatId) {
+    public Flux<String> doChatWithToolsStream(String message, String chatId, Long userId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
@@ -229,7 +229,7 @@ public class LoveApp {
 //        log.info("content: {}", content);
         return content;
     }
-    public String doChatWithTools(String message, String chatId) {
+    public String doChatWithTools(String message, String chatId, Long userId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
@@ -253,7 +253,7 @@ public class LoveApp {
     }
     @Resource
     private ToolCallbackProvider toolCallbackProvider;
-    public String doChatWithMCP(String message, String chatId) {
+    public String doChatWithMCP(String message, String chatId, Long userId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。

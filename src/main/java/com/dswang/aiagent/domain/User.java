@@ -8,46 +8,31 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 聊天消息实体类
- * 对应数据库表 chat_messages
+ * 用户实体类
+ * 对应数据库表 users
  *
  * @author Mr.Wang
- * @date 2026-01-23
+ * @date 2026-02-12
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessage {
+public class User {
     /**
-     * 主键ID
+     * 用户ID，主键
      */
     private Long id;
 
     /**
-     * 用户ID
+     * 用户名，唯一
      */
-    private Long userId;
+    private String username;
 
     /**
-     * 对话组ID
+     * 密码哈希值，使用BCrypt加密
      */
-    private String conversationId;
-
-    /**
-     * 消息类型：USER, ASSISTANT, SYSTEM
-     */
-    private String messageType;
-
-    /**
-     * 消息内容
-     */
-    private String content;
-
-    /**
-     * 消息元数据（JSON格式）
-     */
-    private String metadata;
+    private String passwordHash;
 
     /**
      * 创建时间

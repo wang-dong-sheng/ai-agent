@@ -30,10 +30,25 @@ public class PostgresChatMemory implements ChatMemory {
 
     private final ChatMessageService chatMessageService;
     private final ObjectMapper objectMapper;
+    private final InheritableThreadLocal<Long> currentUserId = new InheritableThreadLocal<>();
 
     public PostgresChatMemory(ChatMessageService chatMessageService) {
         this.chatMessageService = chatMessageService;
         this.objectMapper = new ObjectMapper();
+    }
+
+    /**
+     * 设置当前用户ID
+     */
+    public void setCurrentUserId(Long userId) {
+        currentUserId.set(userId);
+    }
+
+    /**
+     * 清除当前用户ID
+     */
+    public void clearCurrentUserId() {
+        currentUserId.remove();
     }
 
     @Override
@@ -44,9 +59,11 @@ public class PostgresChatMemory implements ChatMemory {
 
         List<ChatMessage> chatMessages = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
+        // todo 获取不到UserId
+        Long userId = currentUserId.get();
 
         for (Message message : messages) {
-            ChatMessage chatMessage = convertToChatMessage(conversationId, message, now);
+            ChatMessage chatMessage = convertToChatMessage(conversationId, message, now, userId);
             chatMessages.add(chatMessage);
         }
 
@@ -95,7 +112,7 @@ public class PostgresChatMemory implements ChatMemory {
     /**
      * 将Spring AI的Message转换为ChatMessage实体
      */
-    private ChatMessage convertToChatMessage(String conversationId, Message message, LocalDateTime timestamp) {
+    private ChatMessage convertToChatMessage(String conversationId, Message message, LocalDateTime timestamp, Long userId) {
         String messageType = getMessageType(message);
         String content = message.getText() != null ? message.getText() : "";
         
@@ -114,6 +131,7 @@ public class PostgresChatMemory implements ChatMemory {
         }
 
         return ChatMessage.builder()
+                .userId(userId)
                 .conversationId(conversationId)
                 .messageType(messageType)
                 .content(content)

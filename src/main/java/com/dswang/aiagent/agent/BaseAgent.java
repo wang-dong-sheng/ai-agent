@@ -90,12 +90,10 @@ public abstract class BaseAgent {
 
     public Flux<String> runAsync(String userPrompt) {
         // 参数校验
-        if (this.state != AgentState.IDLE) {
-            return Flux.error(new RuntimeException("Cannot run agent from state: " + this.state));
-        }
-        if (StringUtil.isBlank(userPrompt)) {
-            return Flux.error(new RuntimeException("Cannot run agent with empty user prompt"));
-        }
+//
+
+
+
 
         // 初始化状态
         state = AgentState.RUNNING;
@@ -143,6 +141,12 @@ public abstract class BaseAgent {
      * 清理资源  
      */  
     protected void cleanup() {  
+        // 重置状态为 IDLE，以便代理可以再次执行
+        this.state = AgentState.IDLE;
+        // 清空消息列表，以便下次执行时使用新的上下文
+        this.messageList.clear();
+        // 重置当前步骤计数
+        this.currentStep = 0;
         // 子类可以重写此方法来清理资源  
     }  
 }
