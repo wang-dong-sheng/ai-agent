@@ -58,33 +58,33 @@ public class AiController {
                 });
     }
 
-    @GetMapping(value = "/love_app/chat/agent/sse")
-    public Flux<ServerSentEvent<String>> doChatWithRagStream(@RequestParam("message") String message,
-                                                            @RequestParam("chatId") String chatId,
-                                                            @RequestParam("userId") Long userId) {
-        postgresChatMemory.setConversationUserId(chatId, userId);
-        return loveApp.doChatWithRagStream(message, chatId, userId)
-                .map(chunk -> ServerSentEvent.<String>builder()
-                        .data(chunk)
-                        .build())
-                .doFinally(signalType -> {
-                    postgresChatMemory.clearConversationUserId(chatId);
-                });
-    }
-//
 //    @GetMapping(value = "/love_app/chat/agent/sse")
-//    public Flux<ServerSentEvent<String>> doChatWithAgent(@RequestParam("message") String message,
-//                                                        @RequestParam("chatId") String chatId,
-//                                                        @RequestParam("userId") Long userId) {
-//        postgresChatMemory.setCurrentUserId(userId);
-//        return yuManus.runAsync(message)
+//    public Flux<ServerSentEvent<String>> doChatWithRagStream(@RequestParam("message") String message,
+//                                                            @RequestParam("chatId") String chatId,
+//                                                            @RequestParam("userId") Long userId) {
+//        postgresChatMemory.setConversationUserId(chatId, userId);
+//        return loveApp.doChatWithRagStream(message, chatId, userId)
 //                .map(chunk -> ServerSentEvent.<String>builder()
 //                        .data(chunk)
 //                        .build())
 //                .doFinally(signalType -> {
-//                    postgresChatMemory.clearCurrentUserId();
+//                    postgresChatMemory.clearConversationUserId(chatId);
 //                });
 //    }
+//
+    @GetMapping(value = "/love_app/chat/agent/sse")
+    public Flux<ServerSentEvent<String>> doChatWithAgent(@RequestParam("message") String message,
+                                                        @RequestParam("chatId") String chatId,
+                                                        @RequestParam("userId") Long userId) {
+        postgresChatMemory.setCurrentUserId(userId);
+        return yuManus.runAsync(message)
+                .map(chunk -> ServerSentEvent.<String>builder()
+                        .data(chunk)
+                        .build())
+                .doFinally(signalType -> {
+                    postgresChatMemory.clearCurrentUserId();
+                });
+    }
 
     @GetMapping(value = "/test")
     public String test() {
