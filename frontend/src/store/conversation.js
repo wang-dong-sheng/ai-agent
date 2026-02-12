@@ -117,19 +117,31 @@ export const useConversationStore = defineStore('conversation', {
         if (!userInfo || !userInfo.id) {
           throw new Error('用户未登录')
         }
-        
+
         const response = await api.get('/conversation/messages', {
           params: {
             userId: userInfo.id,
             conversationId
           }
         })
+
+        // 将 messageType 转换为 role
+        const normalizeMessages = (messages) => {
+          if (!Array.isArray(messages)) return []
+          return messages.map(msg => ({
+            ...msg,
+            role: msg.messageType?.toLowerCase() || msg.role || 'user',
+            // 保留原始字段
+            messageType: msg.messageType
+          }))
+        }
+
         // 确保 currentMessages 始终是数组
         if (Array.isArray(response.data)) {
-          this.currentMessages = response.data
+          this.currentMessages = normalizeMessages(response.data)
         } else if (response.data && response.data.data) {
           // 处理后端返回的标准格式 { success: true, data: [] }
-          this.currentMessages = Array.isArray(response.data.data) ? response.data.data : []
+          this.currentMessages = normalizeMessages(response.data.data)
         } else {
           this.currentMessages = []
         }
