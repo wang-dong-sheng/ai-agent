@@ -22,6 +22,7 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -64,12 +65,12 @@ public class LoveApp {
             "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
             "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
-    public LoveApp(ChatModel dashscopeChatModel, PostgresChatMemory postgresChatMemory) {
+    public LoveApp(@Qualifier("dashscopeChatModel") ChatModel dashscopeChatModel, PostgresChatMemory postgresChatMemory) {
         // 使用PostgreSQL数据库持久化聊天记录
         // 如果需要切换回文件存储，可以取消下面的注释，并注释掉postgresChatMemory相关代码
         // String fileDir = System.getProperty("user.dir")+"/temp/chat-memory";
         // FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(fileDir);
-        
+
         chatClientBuilder = ChatClient.builder(dashscopeChatModel)
 //                .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
@@ -91,7 +92,7 @@ public class LoveApp {
      * @param chatId
      * @return
      */
-    public LoveReport doChatWithReport(String message, String chatId, Long userId) {
+    public LoveReport doChatWithReport(String message, String chatId) {
         LoveReport loveReport = chatClient
                 .prompt()
                 .user(message)
@@ -103,7 +104,7 @@ public class LoveApp {
         return loveReport;
     }
 
-    public Flux<String> doChatStreamWithReport(String message, String chatId, Long userId) {
+    public Flux<String> doChatStreamWithReport(String message, String chatId) {
         Flux<String> content = chatClient
                 .prompt()
                 .user(message)
@@ -115,7 +116,7 @@ public class LoveApp {
     }
 
 
-    public String doChat(String message, String chatId, Long userId) {
+    public String doChat(String message, String chatId) {
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
@@ -128,7 +129,7 @@ public class LoveApp {
         return content;
     }
 
-    public String doChatWithRag(String message, String chatId, Long userId) {
+    public String doChatWithRag(String message, String chatId) {
 
         //1.对用户消息进行重写，专业化，让大模型更容易理解
 
@@ -154,7 +155,7 @@ public class LoveApp {
         return content;
     }
 
-    public Flux<String> doChatWithRagStream(String message, String chatId, Long userId) {
+    public Flux<String> doChatWithRagStream(String message, String chatId) {
 
         //1.对用户消息进行重写，专业化，让大模型更容易理解
 
@@ -180,7 +181,7 @@ public class LoveApp {
     }
 
 
-    public String doChatWithRagRAA(String message, String chatId, Long userId) {
+    public String doChatWithRagRAA(String message, String chatId) {
         // 使用本地 pgVector 向量数据库做 RAG，检索 top 5 相关文档
         //使用大模型对用户问题进行改写
         Advisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
@@ -208,7 +209,7 @@ public class LoveApp {
         return answer;
     }
 
-    public Flux<String> doChatWithToolsStream(String message, String chatId, Long userId) {
+    public Flux<String> doChatWithToolsStream(String message, String chatId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
@@ -230,7 +231,7 @@ public class LoveApp {
 //        log.info("content: {}", content);
         return content;
     }
-    public String doChatWithTools(String message, String chatId, Long userId) {
+    public String doChatWithTools(String message, String chatId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
@@ -254,7 +255,7 @@ public class LoveApp {
     }
     @Resource
     private ToolCallbackProvider toolCallbackProvider;
-    public String doChatWithMCP(String message, String chatId, Long userId) {
+    public String doChatWithMCP(String message, String chatId) {
         String TOOLS_GUARDRAIL = """
                 你可以调用工具来完成任务，但必须遵守以下规则：
                 - 最多调用工具 3 次（总次数，不是每个工具）。
