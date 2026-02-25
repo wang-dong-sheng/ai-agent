@@ -36,8 +36,6 @@ class LoveAppTest {
     private MyKeywordEnricher myKeywordEnricher;
     @Resource
     private MySummaryEnricher mySummaryEnricher;
-    @Resource
-    private ZhiPuAgent zhiPuAgent;
 
 
     @Resource(name = "pgVectorVectorStore")
@@ -303,17 +301,6 @@ class LoveAppTest {
                 并以 PDF 格式输出""";
         String answer = yuManus.run(userPrompt);
         Assertions.assertNotNull(answer);
-    }
-
-
-    @Test
-    void doZhiPuChatWithRag() {
-        String appId = UUID.randomUUID().toString();
-//        第一轮
-        String massage = "我已经结婚了，我要怎么搞呀，才能搞好这段关系";
-        String s = zhiPuAgent.doChatWithRag(massage, appId);
-        Assertions.assertNotNull(s);
-
     }
 
 

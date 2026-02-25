@@ -4,7 +4,6 @@ package com.dswang.aiagent.rag.etl;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.KeywordMetadataEnricher;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,7 +13,7 @@ public class MyKeywordEnricher {
 
     private final ChatModel chatModel;
 
-    public MyKeywordEnricher(@Qualifier("dashscopeChatModel") ChatModel dashscopeChatModel) {
+    public MyKeywordEnricher(ChatModel dashscopeChatModel) {
         this.chatModel = dashscopeChatModel;
     }
 

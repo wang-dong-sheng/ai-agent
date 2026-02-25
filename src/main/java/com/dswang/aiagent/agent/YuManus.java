@@ -5,6 +5,7 @@ import com.dswang.aiagent.advisor.MyLoggerAdvisor;
 import com.dswang.aiagent.chatMemory.PostgresChatMemory;
 import com.dswang.aiagent.rag.QueryRewriter;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
@@ -12,7 +13,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -22,22 +22,18 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 public class YuManus extends ToolCallAgent {
 
     private final PostgresChatMemory postgresChatMemory;
-    private final VectorStore vectorStore;
-    private final QueryRewriter queryRewriter;
+    @Resource(name = "pgVectorVectorStore")
+    private VectorStore vectorStore;
+    @Resource
+    private QueryRewriter queryRewriter;
 
     private final ChatModel chatModel;
     private ChatClient ragChatClient;
 
-    public YuManus(ToolCallback[] allTools,
-                   @Qualifier("dashscopeChatModel") ChatModel dashscopeChatModel,
-                   PostgresChatMemory postgresChatMemory,
-                   @Qualifier("pgVectorVectorStore") VectorStore vectorStore,
-                   QueryRewriter queryRewriter) {
+    public YuManus(ToolCallback[] allTools, ChatModel dashscopeChatModel, PostgresChatMemory postgresChatMemory) {
         super(allTools);
         this.postgresChatMemory = postgresChatMemory;
         this.chatModel = dashscopeChatModel;
-        this.vectorStore = vectorStore;
-        this.queryRewriter = queryRewriter;
         this.setName("yuManus");
         String SYSTEM_PROMPT = """
                 You are YuManus, an all-capable AI assistant, aimed at solving any task presented by the user.
